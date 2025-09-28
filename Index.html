@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fa">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>بررسی سریع یوزرنیم‌های تلگرام </title>
+<style>
+  body{font-family: Tahoma, Arial; background:#0f1724; color:#e6eef8; padding:20px; line-height:1.6}
+  h1{font-size:20px; margin:0 0 10px}
+  .box{background:#0b1220; border:1px solid #172030; padding:14px; border-radius:8px; max-width:820px}
+  .controls{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px}
+  input,select,button{padding:8px 10px; border-radius:6px; border:1px solid #223046; background:#0b1624; color:#e6eef8}
+  button{cursor:pointer}
+  .list{margin-top:12px; max-height:420px; overflow:auto; border-top:1px dashed #223046; padding-top:10px}
+  .item{padding:6px 8px; border-radius:6px; margin-bottom:6px; background:#07121a; display:flex; justify-content:space-between; align-items:center}
+  .small{font-size:13px; color:#9fb3d6}
+  a.link{color:#7ee0a7; text-decoration:none}
+  .badge{font-size:12px; padding:4px 8px; border-radius:999px; background:#172a22; color:#bfe5c8; border:1px solid #234732}
+  footer{margin-top:14px; font-size:13px; color:#9fb3d6}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>ابزار ساده تولید و بررسی اولیه یوزرنیم تلگرام</h1>
+  <p class="small">خیلی ساده و دستی طراحی شده — لینک‌ها باز می‌شن یا به صورت فهرست نمایش داده می‌شن. هیچ فراخوان سروری خاصی نمی‌فرستن تا چیز عجیب و غریبی به چشم نیاد.</p>
+
+  <div class="controls">
+    <label>تعداد:
+      <select id="count">
+        <option>5</option><option>10</option><option selected>20</option><option>50</option>
+      </select>
+    </label>
+
+    <label>حداکثر طول یوزرنیم:
+      <select id="length">
+        <option>5</option><option selected>6</option><option>7</option><option>8</option>
+      </select>
+    </label>
+
+    <label>فاصله باز کردن خودکار (ms):
+      <input id="delay" type="number" value="600" style="width:90px"/>
+    </label>
+
+    <button id="gen">تولید</button>
+    <button id="openAll">باز کردن خودکار (تا وقتی بلاک نشه)</button>
+    <button id="clear">پاک کن</button>
+  </div>
+
+  <div id="status" class="small">آماده.</div>
+
+  <div class="list" id="list"></div>
+
+  <footer>روش کار: دکمه "تولید" یوزرنیم تصادفی می‌سازه. سپس یا روی لینک‌ها دستی کلیک کن یا "باز کردن خودکار" رو بزن (اگر مرورگر پاپ‌آپ بلاک کنه، از لینک‌ها استفاده کن).</footer>
+</div>
+
+<script>
+(function(){
+  const letters = 'qwertyuiopasdfghjklzxcvbnm';
+  const chars = 'qwertyuiopasdfghjklzxcvbnm_0123456789';
+  const genBtn = document.getElementById('gen');
+  const openBtn = document.getElementById('openAll');
+  const clearBtn = document.getElementById('clear');
+  const listEl = document.getElementById('list');
+  const status = document.getElementById('status');
+
+  function randFrom(s){ return s[Math.floor(Math.random()*s.length)]; }
+
+  function genOne(len){
+    let s = randFrom(letters);
+    for(let i=1;i<len;i++){
+      s += randFrom(chars);
+    }
+    return s;
+  }
+
+  function makeList(count, len){
+    const arr = [];
+    for(let i=0;i<count;i++){
+      arr.push(genOne(len));
+    }
+    return arr;
+  }
+
+  function render(arr){
+    listEl.innerHTML = '';
+    arr.forEach(u=>{
+      const it = document.createElement('div');
+      it.className = 'item';
+      it.innerHTML = `<div><strong>${u}</strong> <span class="small"> — https://t.me/${u}</span></div>
+                      <div style="display:flex;gap:8px;align-items:center">
+                        <a class="link" href="https://t.me/${u}" target="_blank" rel="noopener noreferrer">باز کردن</a>
+                        <span class="badge">کپی</span>
+                      </div>`;
+      const badge = it.querySelector('.badge');
+      badge.addEventListener('click', ()=> {
+        navigator.clipboard && navigator.clipboard.writeText(u).then(()=> {
+          badge.textContent = 'کپی شد';
+          setTimeout(()=> badge.textContent = 'کپی',700);
+        }).catch(()=>{ badge.textContent = 'خطا'; setTimeout(()=> badge.textContent = 'کپی',700);});
+      });
+      listEl.appendChild(it);
+    });
+  }
+
+  genBtn.addEventListener('click', ()=> {
+    const count = parseInt(document.getElementById('count').value,10);
+    const len = parseInt(document.getElementById('length').value,10);
+    status.textContent = 'در حال تولید...';
+    const arr = makeList(count,len);
+    render(arr);
+    status.textContent = `تولید شد: ${arr.length} نام`;
+  });
+
+  clearBtn.addEventListener('click', ()=> {
+    listEl.innerHTML = '';
+    status.textContent = 'پاک شد.';
+  });
+
+  openBtn.addEventListener('click', ()=> {
+    const delay = parseInt(document.getElementById('delay').value,10) || 600;
+    const items = Array.from(listEl.querySelectorAll('.item strong')).map(el=>el.textContent);
+    if(!items.length){ status.textContent = 'اول تولید کن.'; return; }
+    status.textContent = 'شروع باز کردن... اگر مرورگر پاپ‌آپ بلاک کنه، از لینک‌ها استفاده کن.';
+    // باز کردن با تأخیر تا مرورگر کمتر بلاک کنه:
+    items.forEach((u,i)=>{
+      setTimeout(()=>{
+        try{
+          window.open('https://t.me/' + u, '_blank', 'noopener');
+        }catch(e){}
+        // اگر باز نشد، کاربر میتونه دستی کلیک کنه
+      }, i * delay);
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
